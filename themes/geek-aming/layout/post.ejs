@@ -1,0 +1,303 @@
+<style>
+  /* 修复: 覆盖原 head 里的 overflow-x: hidden，改用 clip，这样既能防止横向滚动，又不会让 sticky 悬浮失效 */
+  html, body {
+    overflow-x: clip !important;
+  }
+
+  /* ================= 完美重置 Hexo 代码块框架 ================= */
+  .prose figure.highlight {
+    margin: 1.5em 0;
+    border-radius: 0.75rem; /* 圆角 */
+    overflow: hidden;
+    /* 放大字体，并引入专业的代码等宽字体 */
+    font-size: 0.95em !important; 
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace !important;
+    background-color: #f8fafc; /* 白天模式背景：极浅灰 */
+    border: 1px solid #e2e8f0; /* 白天模式边框 */
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
+  }
+  
+  html.dark .prose figure.highlight {
+    background-color: #020617; /* 夜间模式背景：极暗黑，与页面背景色拉开差距 */
+    border: 1px solid #1e293b; /* 夜间模式边框 */
+  }
+
+  /* 清除表格干扰 */
+  .prose figure.highlight table {
+    margin: 0 !important;
+    border-collapse: collapse !important;
+    width: 100% !important;
+  }
+  .prose figure.highlight tbody, 
+  .prose figure.highlight tr, 
+  .prose figure.highlight td {
+    border: none !important;
+    padding: 0 !important;
+    background: transparent !important;
+  }
+
+  /* 左侧行号区域 */
+  .prose figure.highlight td.gutter {
+    width: 1%; /* 让行号栏缩小到刚好包裹文字，紧贴代码 */
+    min-width: 40px;
+    text-align: right;
+    user-select: none; /* 防止复制选中行号 */
+    background-color: #f1f5f9; /* 白天模式行号背景 */
+  }
+  html.dark .prose figure.highlight td.gutter {
+    background-color: #0f172a; /* 夜间模式行号背景 */
+  }
+
+  /* 清除 pre 标签的冲突，重置内外边距 */
+  .prose figure.highlight pre {
+    margin: 0 !important;
+    background: transparent !important;
+    border-radius: 0 !important;
+    line-height: 1.65 !important;
+    color: #24292e !important; /* 白天默认文字颜色 */
+  }
+  html.dark .prose figure.highlight pre {
+    color: #e6edf3 !important; /* 夜间默认文字颜色 */
+  }
+  
+  /* 行号和代码的内容间距 */
+  .prose figure.highlight td.gutter pre {
+    padding: 1.1rem 0.75rem !important; /* 统一上下边距 */
+    color: #94a3b8 !important; /* 行号颜色 */
+  }
+  .prose figure.highlight td.code pre {
+    padding: 1.1rem 1.25rem !important; /* 统一上下边距 */
+    overflow-x: auto; /* 代码超长允许横向滚动 */
+    width: 100%;
+  }
+
+  /* ================= 修复 Tailwind Prose 默认反引号 ================= */
+  .prose :not(pre) > code::before,
+  .prose :not(pre) > code::after,
+  .prose p code::before,
+  .prose p code::after,
+  .prose li code::before,
+  .prose li code::after {
+    content: '' !important;
+    display: none !important;
+  }
+
+  /* ================= Hexo 语法高亮配色 (白天模式) ================= */
+  .prose figure.highlight .comment,
+  .prose figure.highlight .quote { color: #6a737d; font-style: normal; } /* 修复: 去除斜体，改为正体 */
+  .prose figure.highlight .keyword,
+  .prose figure.highlight .selector-tag,
+  .prose figure.highlight .addition { color: #d73a49; }
+  .prose figure.highlight .number,
+  .prose figure.highlight .string,
+  .prose figure.highlight .meta .meta-string,
+  .prose figure.highlight .literal,
+  .prose figure.highlight .doctag,
+  .prose figure.highlight .regexp { color: #032f62; }
+  .prose figure.highlight .title,
+  .prose figure.highlight .section,
+  .prose figure.highlight .name,
+  .prose figure.highlight .selector-id,
+  .prose figure.highlight .selector-class { color: #6f42c1; }
+  .prose figure.highlight .attribute,
+  .prose figure.highlight .attr,
+  .prose figure.highlight .variable,
+  .prose figure.highlight .template-variable,
+  .prose figure.highlight .class .title,
+  .prose figure.highlight .type { color: #e36209; }
+  .prose figure.highlight .symbol,
+  .prose figure.highlight .bullet,
+  .prose figure.highlight .subst,
+  .prose figure.highlight .meta,
+  .prose figure.highlight .meta .keyword,
+  .prose figure.highlight .selector-attr,
+  .prose figure.highlight .selector-pseudo,
+  .prose figure.highlight .link { color: #005cc5; }
+  .prose figure.highlight .built_in,
+  .prose figure.highlight .deletion { color: #b31d28; }
+
+  /* ================= Hexo 语法高亮配色 (夜间模式) ================= */
+  html.dark .prose figure.highlight .comment,
+  html.dark .prose figure.highlight .quote { color: #8b949e; font-style: normal; } /* 修复: 去除斜体，改为正体 */
+  html.dark .prose figure.highlight .keyword,
+  html.dark .prose figure.highlight .selector-tag,
+  html.dark .prose figure.highlight .addition { color: #ff7b72; }
+  html.dark .prose figure.highlight .number,
+  html.dark .prose figure.highlight .string,
+  html.dark .prose figure.highlight .meta .meta-string,
+  html.dark .prose figure.highlight .literal,
+  html.dark .prose figure.highlight .doctag,
+  html.dark .prose figure.highlight .regexp { color: #a5d6ff; }
+  html.dark .prose figure.highlight .title,
+  html.dark .prose figure.highlight .section,
+  html.dark .prose figure.highlight .name,
+  html.dark .prose figure.highlight .selector-id,
+  html.dark .prose figure.highlight .selector-class { color: #d2a8ff; }
+  html.dark .prose figure.highlight .attribute,
+  html.dark .prose figure.highlight .attr,
+  html.dark .prose figure.highlight .variable,
+  html.dark .prose figure.highlight .template-variable,
+  html.dark .prose figure.highlight .class .title,
+  html.dark .prose figure.highlight .type { color: #ffa657; }
+  html.dark .prose figure.highlight .symbol,
+  html.dark .prose figure.highlight .bullet,
+  html.dark .prose figure.highlight .subst,
+  html.dark .prose figure.highlight .meta,
+  html.dark .prose figure.highlight .meta .keyword,
+  html.dark .prose figure.highlight .selector-attr,
+  html.dark .prose figure.highlight .selector-pseudo,
+  html.dark .prose figure.highlight .link { color: #79c0ff; }
+  html.dark .prose figure.highlight .built_in,
+  html.dark .prose figure.highlight .deletion { color: #ffa198; }
+</style>
+
+<main class="flex-1 w-full flex justify-center px-6 md:px-20 pt-24 md:pt-28 pb-16">
+  <div class="w-full max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-[260px,minmax(0,1fr)] gap-10 items-start">
+    
+    <!-- 侧边栏（添加 sticky 定位和独立滚动条实现悬浮效果） -->
+    <aside class="hidden md:flex flex-col border-r border-outline-variant/70 dark:border-slate-800 pr-8 sticky top-28 self-start max-h-[calc(100vh-8rem)] overflow-y-auto overflow-x-hidden custom-scrollbar">
+      <div>
+        <div class="flex items-center space-x-3 mb-4">
+          <span class="h-px w-8 bg-secondary"></span>
+          <span class="font-label text-[10px] uppercase tracking-[0.3em] text-secondary dark:text-orange-400 font-bold">
+            随笔文章
+          </span>
+        </div>
+        <div class="font-headline text-xl text-primary dark:text-white leading-normal tracking-tight mb-4 py-1">
+          <%= page.title %>
+        </div>
+        <div class="text-xs text-on-surface-variant dark:text-gray-500 space-y-1 mb-6 border-b border-gray-100 dark:border-slate-800 pb-4">
+          <div class="font-label uppercase tracking-[0.25em]">
+            <%= date(page.date, 'YYYY.MM.DD') %>
+          </div>
+          <% if (page.categories && page.categories.length) { %>
+            <div class="mt-2">
+              <span class="opacity-70">分类</span>
+              <span class="ml-2">
+                <%= page.categories.map(function(c){ return c.name; }).join(' / ') %>
+              </span>
+            </div>
+          <% } %>
+        </div>
+        <div id="post-toc" class="text-xs text-on-surface-variant dark:text-gray-300 space-y-2 pb-8">
+        </div>
+      </div>
+    </aside>
+
+    <!-- 文章主体 -->
+    <article class="w-full min-w-0">
+      <header class="mb-8 md:mb-10">
+        <div class="flex items-center space-x-3 mb-3 md:mb-4 md:hidden">
+          <span class="h-px w-8 md:w-12 bg-secondary"></span>
+          <span class="font-label text-[10px] md:text-xs uppercase tracking-[0.3em] text-secondary dark:text-orange-400 font-bold">
+            <%= date(page.date, 'YYYY MMM DD') %>
+          </span>
+        </div>
+        <h1 class="font-headline text-3xl md:text-4xl lg:text-5xl text-primary dark:text-white leading-normal tracking-tight mb-3 md:mb-4 py-1">
+          <%= page.title %>
+        </h1>
+        <div class="flex flex-wrap items-center text-xs md:text-sm text-on-surface-variant dark:text-gray-400 gap-3">
+          <% if (page.categories && page.categories.length) { %>
+            <span class="font-label uppercase tracking-[0.2em]">
+              <%= page.categories.map(function(c){ return c.name; }).join(' / ') %>
+            </span>
+          <% } %>
+          <% if (page.tags && page.tags.length) { %>
+            <span class="inline-flex flex-wrap gap-2">
+              <% page.tags.forEach(function(tag){ %>
+                <a href="<%- url_for(tag.path) %>" class="px-2 py-0.5 rounded-full bg-surface-variant dark:bg-slate-800 text-xs font-label tracking-widest hover:bg-secondary hover:text-white transition-colors">
+                  <%= tag.name %>
+                </a>
+              <% }) %>
+            </span>
+          <% } %>
+        </div>
+      </header>
+
+      <!-- 文章内容渲染区域 -->
+      <div class="prose prose-slate dark:prose-invert max-w-none prose-headings:font-headline prose-headings:tracking-tight prose-p:my-3 md:prose-p:my-4 prose-p:leading-relaxed prose-li:my-1 prose-img:rounded-lg prose-a:text-secondary prose-a:no-underline hover:prose-a:underline prose-blockquote:my-4 prose-code:bg-surface-variant/70 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded-md prose-code:text-[0.85em]" id="post-content">
+        <%- page.content %>
+      </div>
+    </article>
+  </div>
+</main>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    // 处理 Hexo 生成的代码块复制按钮
+    var hexoBlocks = document.querySelectorAll('figure.highlight');
+    hexoBlocks.forEach(function (figure) {
+      figure.classList.add('group', 'relative');
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.innerText = '复制';
+      // 修改为更具对比度的按钮背景
+      btn.className = 'absolute right-2 top-2 px-2.5 py-1 rounded-md bg-gray-200 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 text-[10px] font-label uppercase tracking-[0.18em] text-gray-600 dark:text-gray-300 hover:bg-secondary hover:text-white dark:hover:bg-secondary transition-all z-10 opacity-0 group-hover:opacity-100';
+      
+      btn.addEventListener('click', function () {
+        var codeEl = figure.querySelector('.code pre') || figure;
+        var text = codeEl.innerText;
+        
+        var done = function () {
+          var old = btn.innerText;
+          btn.innerText = '已复制';
+          setTimeout(function () { btn.innerText = old; }, 1200);
+        };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(done).catch(done);
+        } else {
+          try {
+            var textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+          } catch (e) {}
+          done();
+        }
+      });
+      figure.appendChild(btn);
+    });
+
+    // 小标题导航逻辑
+    var content = document.getElementById('post-content');
+    var toc = document.getElementById('post-toc');
+    if (content && toc) {
+      var headings = content.querySelectorAll('h2, h3');
+      var items = [];
+      headings.forEach(function (h, index) {
+        var text = h.innerText || h.textContent || '';
+        if (!text) return;
+        if (!h.id) {
+          h.id = 'h-' + index + '-' + Math.random().toString(16).slice(2, 6);
+        }
+        items.push({ id: h.id, text: text, level: h.tagName.toLowerCase() === 'h3' ? 3 : 2 });
+      });
+      if (items.length) {
+        var title = document.createElement('div');
+        title.className = 'font-label uppercase tracking-[0.25em] text-[10px] text-on-surface-variant/70 dark:text-gray-500 mb-3 mt-2 font-bold';
+        title.innerText = '小标题导航';
+        toc.appendChild(title);
+        items.forEach(function (item) {
+          var link = document.createElement('a');
+          link.href = '#' + item.id;
+          link.innerText = item.text;
+          // 根据标题级别添加缩进效果
+          link.className = 'block cursor-pointer text-sm leading-relaxed text-slate-600 dark:text-slate-400 hover:text-secondary dark:hover:text-orange-400 transition-colors py-1 ' + (item.level === 3 ? 'pl-4 text-xs' : 'font-medium');
+          link.addEventListener('click', function (e) {
+            e.preventDefault();
+            var target = document.getElementById(item.id);
+            if (!target) return;
+            var rect = target.getBoundingClientRect();
+            var offset = window.scrollY + rect.top - 96; // 减去导航栏的高度
+            window.scrollTo({ top: offset, behavior: 'smooth' });
+          });
+          toc.appendChild(link);
+        });
+      }
+    }
+  });
+</script>

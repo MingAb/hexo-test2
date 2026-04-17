@@ -1,0 +1,524 @@
+---
+title: 工作笔记
+---
+
+## 设置相机的自定义绑定
+
+输入`udevadm info -a /dev/video0`可以查看video的属性。
+
+根据属性可以设置不同的匹配规则，我设置的匹配规则如下：
+
+```bash
+sudo vim /etc/udev/rules.d/99-persistent-camera.rules
+# 绑定 USB CAMERA2 到 right_camera
+KERNEL=="video[0,2,4,6,8]*", ATTRS{name}=="USB  CAMERA2: USB  CAMERA2", SYMLINK+="right_camera"
+
+# 绑定 USB CAMERA3 到 left_camera  
+KERNEL=="video[0,2,4,6,8]*", ATTRS{name}=="USB  CAMERA3: USB  CAMERA3", SYMLINK+="left_camera"
+
+# 输入下面命重新配置，插拔usb
+sudo udevadm trigger
+sudo /etc/init.d/udev restart
+# 输入下面查看是否绑定成功
+ll /dev/*camera
+```
+
+
+
+## 查看内核cpu的频率等情况
+
+```bash
+# 频率策略
+cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
+# 当前频率
+cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_cur_freq
+# 最大频率
+cat /sys/devices/system/cpu/cpu*/cpufreq/cpuinfo_max_freq
+```
+
+
+
+
+
+## 生成密钥上传到远端服务器
+
+先在本机生成密钥，再上传到远端服务器
+```bash
+ssh-keygen -t rsa -b 4096 -C "your_email@example.com
+ssh-copy-id -i ~/.ssh/id_rsa.pub username@remote_server_ip
+```
+也可以手动创建粘贴生成的密钥，登录到服务器控制
+
+```bash
+mkdir -p ~/.ssh
+chmod 700 ~/.ssh
+touch ~/.ssh/authorized_keys
+chmod 600 ~/.ssh/authorized_keys
+echo "你刚才复制的整个公钥内容" >> ~/.ssh/authorized_keys
+```
+
+
+
+## 配置开机自启动wifi热点
+
+```bash
+# 用图形界面或其他方式创建过热点，先列出所有连接找到它的名字
+nmcli connection show
+# 设置热点开机自启动
+sudo nmcli connection modify Hotspot connection.autoconnect yes
+```
+
+
+
+## 配置开机自设置高性能模式
+
+编辑自定义service
+
+`sudo vim /etc/systemd/system/cpu-performance.service`
+
+粘贴下面内容：
+
+```bash
+[Unit]
+Description=Set CPU to performance governor
+# 关键修改：在所有电源管理服务之后运行
+After=sysinit.target
+After=systemd-udevd.service
+After=multi-user.target
+# 确保在这些服务之后运行
+After=cpufrequtils.service
+After=ondemand.service
+After=power-profiles-daemon.service
+Wants=systemd-udevd.service
+
+[Service]
+Type=oneshot
+# 增加更长的等待时间
+ExecStartPre=/bin/sleep 8
+# 使用循环确保设置成功
+ExecStart=/bin/bash -c 'for i in {1..3}; do for cpu in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do echo performance > "$cpu" 2>/dev/null; done; sleep 1; done'
+RemainAfterExit=yes
+User=root
+PermissionsStartOnly=yes
+
+[Install]
+WantedBy=multi-user.target
+```
+
+重新加载启动：
+
+```
+# 重新加载 systemd
+sudo systemctl daemon-reload
+# 启用开机自启动
+sudo systemctl enable cpu-performance.service
+# 立即启动
+sudo systemctl start cpu-performance.service
+# 检查状态
+sudo systemctl status cpu-performance.service
+# 查看日志
+sudo journalctl -u cpu-performance.service -f
+```
+
+*很多时候不生效的原因是**后续**的开机自启动service又给重置回去了 。
+
+
+
+## 源码编译安装LASlib库步骤
+
+```bash
+cd ../../LASlib # 切换到 LASlib 根目录
+mkdir build
+cd build
+# 同样使用 CMake 配置
+cmake -DCMAKE_BUILD_TYPE=Release ..
+# 编译
+make -j$(nproc)
+# 安装
+sudo make install
+# 刷新动态链接库的缓存
+sudo ldconfig
+```
+
+
+
+## 鲁班猫设置wifi自启动有时不生效
+
+1、设置wifi默认启动方式：`nmcli connection modify <connection_name> connection.autoconnect yes`
+
+2、可以创建netplan配置（官方给出）
+
+```bash
+sudo vim /etc/netplan/01-wifi-ap.yaml
+# 填入以下内容
+network:
+  version: 2
+network:
+  version: 2
+  renderer: NetworkManager
+  wifis:
+    wlan0:
+      dhcp4: no
+      addresses: [10.42.0.1/24]
+      access-points:
+        "NEWGIS":
+          password: "soyasoya"
+          mode: ap
+#应用配置
+sudo netplan generate
+sudo netplan apply
+#有时还是不生效（哭）
+```
+
+3、创建热点自动启动服务（用这个方法最稳）：
+
+```bash
+# 创建自定义服务
+systemctl daemon-reload
+sudo vim /etc/systemd/system/hotspot-autostart.service
+```
+
+写入service文件：
+
+```bash
+[Unit]
+Description=Start Robot Wi-Fi Hotspot
+# 等待网络管理服务启动完成
+After=network.target NetworkManager.service
+# 明确声明需要NetworkManager服务
+Requires=NetworkManager.service
+# 可选：等待一段时间，确保Wi-Fi设备就绪
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/nmcli dev wifi hotspot con-name SOYONE password soyasoya ifname wlan0
+ExecStop=/usr/bin/nmcli con down id SOYONE
+RemainAfterExit=yes
+# 添加执行前的延迟（可选，单位秒）
+ExecStartPre=/bin/sleep 5
+ 
+[Install]
+WantedBy=multi-user.target
+```
+
+使用`sudo systemctl enable hotspot-autostart.service`启动服务
+
+实在不行用这个下面的脚本：[鲁班猫配置ap模式脚本](https://doc.embedfire.com/linux/rk356x/quick_start/zh/latest/quick_start/wireless/wifi/wifi.html)
+
+## 设置系统时间
+
+`sudo timedatectl set-time "2025-10-13 17:30:00"`
+
+
+
+##  Ubuntu14.04版本Docker配置和更换源
+
+安装docker：
+
+```bash
+# 更新系统
+sudo apt update
+
+# 安装依赖
+sudo apt install apt-transport-https ca-certificates curl gnupg lsb-release
+
+# 添加 Docker 官方 GPG 密钥
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+
+# 添加 Docker 仓库
+echo "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+# 安装 Docker
+sudo apt update
+sudo apt install docker-ce docker-ce-cli containerd.io
+
+# 启动 Docker 服务
+sudo systemctl enable docker
+sudo systemctl start docker
+
+# 将当前用户添加到 docker 组（避免每次使用 sudo）
+sudo usermod -aG docker $USER
+# 重新登录或执行以下命令生效
+newgrp docker
+```
+
+更换docker源：
+
+```bash
+# 创建 Docker 配置目录
+sudo mkdir -p /etc/docker
+
+# 配置国内镜像加速器
+sudo tee /etc/docker/daemon.json <<EOF
+{
+  "registry-mirrors": [
+    "https://docker.xuanyuan.me",
+	"https://docker.1ms.run",
+	"https://docker.1panel.live",
+	"https://hub.rat.dev",
+	"https://doublezonline.cloud",
+	"https://docker.mrxn.net",
+	"https://docker.anyhub.us.kg",
+	"https://dislabaiot.xyz",
+	"https://docker.fxxk.dedyn.io",
+	"https://docker-mirror.aigc2d.com"
+  ]
+}
+EOF
+
+sudo tee /etc/docker/daemon.json <<EOF
+{
+  "registry-mirrors": [
+	"https://docker.1ms.run"
+  ]
+}
+EOF
+
+# 重启 Docker 服务
+sudo systemctl daemon-reload
+sudo systemctl restart docker
+
+# 检查配置是否生效
+sudo systemctl status docker
+
+# 检查 Docker 配置
+docker info | grep -A 10 "Registry Mirrors"
+
+# 重新尝试运行 hello-world
+docker run hello-world
+```
+
+安装运行14.04
+
+```bash
+# 拉取 Ubuntu 14.04 镜像
+docker pull ubuntu:14.04
+
+# 验证镜像
+docker images
+
+# 运行容器并进入交互模式、分离模式（在后台运行）
+docker run -itd --privileged \
+  -p 10008:10008 \
+  --name ubuntu14-container \
+  -v $(pwd):/workspace \
+  ubuntu:14.04 /bin/bash
+  
+# 查看正在运行的镜像
+docker ps -s
+# 进入docker容器
+docker exec -it <容器ID> /bin/bash
+```
+
+
+
+
+
+用这个源可以安装
+
+```bash
+sudo tee /etc/apt/sources.list <<EOF
+deb http://mirrors.aliyun.com/ubuntu/ trusty main restricted
+deb http://mirrors.aliyun.com/ubuntu/ trusty-updates main restricted
+deb http://mirrors.aliyun.com/ubuntu/ trusty universe
+deb http://mirrors.aliyun.com/ubuntu/ trusty-updates universe
+deb http://mirrors.aliyun.com/ubuntu/ trusty multiverse
+deb http://mirrors.aliyun.com/ubuntu/ trusty-updates multiverse
+deb http://mirrors.aliyun.com/ubuntu/ trusty-backports main restricted universe multiverse
+deb http://mirrors.aliyun.com/ubuntu/ trusty-security main restricted
+deb http://mirrors.aliyun.com/ubuntu/ trusty-security universe
+deb http://mirrors.aliyun.com/ubuntu/ trusty-security multiverse
+EOF
+#更新源
+sudo apt-get update
+
+sudo tee /etc/apt/sources.list <<EOF
+deb http://mirrors.aliyun.com/ubuntu/ bionic main restricted universe multiverse
+deb-src http://mirrors.aliyun.com/ubuntu/ bionic main restricted universe multiverse
+deb http://mirrors.aliyun.com/ubuntu/ bionic-security main restricted universe multiverse
+deb-src http://mirrors.aliyun.com/ubuntu/ bionic-security main restricted universe multiverse
+deb http://mirrors.aliyun.com/ubuntu/ bionic-updates main restricted universe multiverse
+deb-src http://mirrors.aliyun.com/ubuntu/ bionic-updates main restricted universe multiverse
+deb http://mirrors.aliyun.com/ubuntu/ bionic-proposed main restricted universe multiverse
+deb-src http://mirrors.aliyun.com/ubuntu/ bionic-proposed main restricted universe multiverse
+deb http://mirrors.aliyun.com/ubuntu/ bionic-backports main restricted universe multiverse
+deb-src http://mirrors.aliyun.com/ubuntu/ bionic-backports main restricted universe multiverse
+EOF
+```
+
+
+
+```bash
+wget -O boost_1_58_0.tar.bz2 http://sourceforge.net/projects/boost/files/boost/1.58.0/boost_1_58_0.tar.bz2/download
+
+#解压缩
+tar --bzip2 -xvf boost_1_58_0.tar.bz2 
+
+#边缘安装
+./bootstrap.sh --with-libraries=all --with-toolset=gcc 
+./b2 install \
+    --prefix=./stage \
+    --includedir=./stage/include \
+    --libdir=./stage/lib \
+    variant=release \
+    link=shared,static \
+    threading=multi \
+    address-model=64
+```
+
+
+
+## docker配置和读取常用命令
+
+```bash
+# 1. 查看原主机的容器
+docker ps -a
+
+# 2. 提交修改的容器为新镜像
+docker commit <容器ID或名称> my-custom-ubuntu:14.04
+
+# 示例
+docker commit my-old-container my-custom-ubuntu:14.04
+
+# 3. 查看新镜像
+docker images
+
+# 4. 保存新镜像并传输
+docker save -o my-custom-ubuntu.tar my-custom-ubuntu:14.04
+
+```
+
+
+
+```bash
+# 如果容器已停止，先启动
+docker start ubuntu14-container
+
+# 然后进入容器
+docker exec -it ubuntu14-container /bin/bash
+```
+
+## 查看service启动的日志
+
+这是最常用、最直接的命令。将 `your-service-name` 替换为你的实际服务名（例如 `nginx`, `docker`）。
+
+```bash
+sudo journalctl -u soy_nav_server -f
+```
+
+
+
+## cartographer建图导航启动指令
+
+```
+source install/setup.bash
+ros2 launch fishbot_description gazebo.launch.py
+
+source install/setup.bash
+ros2 launch fishbot_cartographer cartographer.launch.py
+
+source install/setup.bash
+ros2 launch fishbot_navigation2 navigation2.launch.py use_sim_time:=True
+#保存地图
+ros2 run nav2_map_server map_saver_cli -t map -f fishbot_map
+
+# 强制释放现有租约
+sudo dhclient -r ens33
+# 重新获取IP
+sudo dhclient -v ens33
+# 检查是否获取到IP
+ip addr show ens33
+
+#启动ssh
+sudo /etc/init.d/ssh start
+#启动rosbridge
+ros2 launch rosbridge_server rosbridge_websocket_launch.xml
+
+#编译
+colcon build
+```
+
+
+
+## 配置共享文件夹
+
+`sudo apt install samba`
+
+`mkdir share `在目录下创建文件夹
+
+`chmod 777 share/` 赋予权限
+
+修改配置`sudo vim /etc/samba/smb.conf`，在最底下添加以下内容，path根据实际文件夹路径修改
+
+ ```
+ [share]
+ 
+   path = /home/firefly/share
+ 
+   writeable = yes
+ 
+   guest ok = yes
+ ```
+
+`systemctl restart smbd.service`
+
+遇到客户端需要输入用户凭证的场合可以添加smb用户，用户必须是系统已存在的用户，密码必须跟用户的系统登陆密码不同。
+
+`sudo smbpasswd -a firefly`
+
+
+
+<div class="my-6 p-4 rounded-xl bg-slate-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700">
+  <audio controls class="w-full outline-none h-10">
+    <source src="https://你的网址/音频名字.mp3" type="audio/mpeg">
+    抱歉，您的浏览器不支持音频播放。
+  </audio>
+</div>
+
+
+<div class="my-6 flex justify-center">
+  <iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width=330 height=86 
+          src="//music.163.com/outchain/player?type=2&id=3348607641&auto=1&height=66">
+  </iframe>
+</div>
+
+
+<div class="w-full aspect-video rounded-xl overflow-hidden shadow-sm border border-gray-200 dark:border-slate-800 my-6">
+  <iframe src="//player.bilibili.com/player.html?isOutside=true&aid=116402790927565&bvid=BV1oAQgBQEVr&cid=37501338704&p=1" 
+          scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true" 
+          class="w-full h-full">
+  </iframe>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+​																				**==本文档遵守WTFPL协议==**

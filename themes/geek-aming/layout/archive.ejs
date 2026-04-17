@@ -1,0 +1,82 @@
+<main class="flex-1 w-full flex justify-center px-6 md:px-20 pt-24 md:pt-28 pb-16">
+  <section class="w-full max-w-5xl mx-auto">
+    <header class="mb-10">
+      <div class="flex items-center space-x-3 mb-3">
+        <span class="h-px w-8 md:w-12 bg-secondary"></span>
+        <span class="font-label text-[10px] md:text-xs uppercase tracking-[0.3em] text-secondary dark:text-orange-400 font-bold">
+          随笔文章
+        </span>
+      </div>
+      <h1 class="font-headline text-4xl md:text-5xl text-primary dark:text-white leading-tight tracking-tight mb-3">
+        时间线上的思考
+      </h1>
+      <p class="font-body text-sm md:text-base text-on-surface-variant dark:text-gray-300 max-w-2xl">
+        以时间为轴，记录下一个个瞬间的想法、实验与灵感火花。你可以从最新的篇章一路向前，回溯思维的足迹。
+      </p>
+    </header>
+
+    <% 
+      const collection = page.posts || site.posts; 
+      let filteredPosts = [];
+      if (collection && collection.length) {
+        // 先按时间倒序排好，然后过滤掉“项目主卡片”和“项目相关的创作记录”
+        filteredPosts = collection.sort('date', -1).filter(function(post) {
+          return post.layout !== 'project' && !post.project;
+        });
+        
+        // 将 Hexo 对象转化为普通数组，以便后面渲染
+        if (filteredPosts.toArray) {
+          filteredPosts = filteredPosts.toArray();
+        }
+      }
+    %>
+
+    <% if (!filteredPosts.length) { %>
+      <p class="text-on-surface-variant dark:text-gray-400 text-sm">
+        还没有文章，打开编辑器写下第一篇想法吧。
+      </p>
+    <% } else { %>
+      <div class="relative pl-6 md:pl-10">
+        <div class="absolute left-2 md:left-3 top-0 bottom-0 border-l border-outline-variant dark:border-slate-700"></div>
+        <div class="space-y-8 md:space-y-10">
+          <% filteredPosts.forEach(function(post) { %>
+            <article class="relative pl-4 md:pl-8">
+              <div class="absolute -left-1 md:-left-1.5 w-3 h-3 rounded-full bg-secondary dark:bg-orange-500 ring-4 ring-secondary-fixed/60 dark:ring-orange-500/20"></div>
+              <div class="flex flex-col md:flex-row md:items-baseline md:justify-between gap-2 md:gap-4 mb-2">
+                <time class="font-label text-[10px] md:text-xs uppercase tracking-[0.25em] text-on-surface-variant dark:text-gray-400">
+                  <%= date(post.date, 'YYYY.MM.DD') %>
+                </time>
+                <a href="<%- url_for(post.path) %>" class="font-headline text-xl md:text-2xl text-primary dark:text-white tracking-tight hover:text-secondary dark:hover:text-orange-400 transition-colors">
+                  <%= post.title %>
+                </a>
+              </div>
+              <p class="font-body text-sm md:text-base text-on-surface-variant dark:text-gray-300 leading-relaxed line-clamp-3 md:line-clamp-2">
+                <% if (post.excerpt && post.excerpt.length) { %>
+                  <%- strip_html(post.excerpt).substr(0, 140) %><% if (strip_html(post.excerpt).length > 140) { %>...<% } %>
+                <% } else { %>
+                  <%- strip_html(post.content).substr(0, 140) %><% if (strip_html(post.content).length > 140) { %>...<% } %>
+                <% } %>
+              </p>
+              <div class="mt-3 flex items-center gap-3 text-[11px] md:text-xs text-on-surface-variant/80 dark:text-gray-400">
+                <a href="<%- url_for(post.path) %>" class="inline-flex items-center font-label uppercase tracking-[0.25em] text-secondary dark:text-orange-400 hover:text-orange-600 dark:hover:text-orange-300 transition-colors">
+                  阅读全文
+                  <span class="material-symbols-outlined text-xs ml-1">arrow_right_alt</span>
+                </a>
+                <% if (post.tags && post.tags.length) { %>
+                  <span class="hidden md:inline-block">•</span>
+                  <span class="inline-flex flex-wrap gap-1">
+                    <% post.tags.forEach(function(tag) { %>
+                      <a href="<%- url_for(tag.path) %>" class="px-2 py-0.5 rounded-full bg-surface-container-highest/60 dark:bg-slate-800 text-[10px] font-label tracking-[0.18em] hover:bg-secondary hover:text-white transition-colors">
+                        <%= tag.name %>
+                      </a>
+                    <% }); %>
+                  </span>
+                <% } %>
+              </div>
+            </article>
+          <% }); %>
+        </div>
+      </div>
+    <% } %>
+  </section>
+</main>

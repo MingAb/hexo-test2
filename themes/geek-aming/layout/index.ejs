@@ -1,0 +1,179 @@
+<main class="flex-1 w-full flex flex-col md:flex-row items-center justify-center px-6 md:px-20 pt-20 md:pt-28 pb-12 md:pb-16 relative overflow-visible">
+  <div class="absolute top-10 left-0 w-64 h-64 md:w-96 md:h-96 bg-secondary-fixed-dim/30 dark:bg-secondary-fixed-dim/10 rounded-full blur-3xl opacity-50 z-0 pointer-events-none"></div>
+  <div class="absolute bottom-10 right-0 w-64 h-64 md:w-96 md:h-96 bg-primary-fixed/40 dark:bg-primary-fixed/10 rounded-full blur-3xl opacity-50 z-0 pointer-events-none"></div>
+
+  <button onclick="changeProject(-1)" class="hidden md:flex absolute left-8 z-40 w-14 h-14 items-center justify-center rounded-full bg-white dark:bg-slate-800 text-primary dark:text-white hover:bg-secondary hover:text-white dark:hover:bg-orange-600 transition-all duration-300 shadow-xl active:scale-95">
+    <span class="material-symbols-outlined text-3xl">arrow_back_ios_new</span>
+  </button>
+
+  <div class="flex flex-col md:flex-row items-center w-full max-w-7xl mx-auto gap-8 md:gap-24 relative z-10">
+    <div class="w-full md:w-1/2 flex flex-col justify-center items-center order-1 md:order-2 relative group fade-transition mt-0" id="img-container">
+      <div style="perspective: 1200px; width: 100%; display: flex; justify-content: center;">
+        <div id="scroll-image" class="relative w-full max-w-[300px] h-[400px] md:max-w-[340px] md:h-[480px] rounded-xl shadow-[0_15px_40px_rgba(0,0,0,0.3)] dark:shadow-[0_15px_40px_rgba(0,0,0,0.8)] transition-all duration-700 ease-out md:[transform:rotateY(15deg)_rotateZ(-4deg)] md:group-hover:[transform:rotateY(0deg)_rotateZ(0deg)_scale(1.05)] cursor-pointer overflow-hidden z-10 keep-rounded">
+          <div class="absolute top-4 left-4 z-10 bg-white/90 dark:bg-black/80 backdrop-blur px-4 py-2 rounded-full shadow-lg transition-colors">
+            <span class="font-label text-[10px] font-black uppercase tracking-widest text-primary dark:text-white">精选集</span>
+          </div>
+          <img id="proj-img" alt="主视觉图" class="w-full h-full object-cover rounded-xl md:grayscale md:group-hover:grayscale-0 transition-all duration-700" src="<%- (theme.home && theme.home.hero_projects && theme.home.hero_projects[0] && theme.home.hero_projects[0].img) || 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?q=80&w=800&auto=format&fit=crop' %>"/>
+          <div class="absolute inset-0 rounded-xl md:bg-black/10 md:group-hover:bg-transparent transition-colors duration-700 pointer-events-none"></div>
+        </div>
+      </div>
+      <div id="proj-num" class="absolute -bottom-10 -left-10 font-headline text-[10rem] text-surface-variant dark:text-slate-800 opacity-40 select-none hidden md:block transition-colors duration-500 z-[-1]">
+        <%- (theme.home && theme.home.hero_projects && theme.home.hero_projects[0] && theme.home.hero_projects[0].num) || '01' %>
+      </div>
+    </div>
+
+    <div id="text-container" class="w-full md:w-1/2 flex flex-col items-start text-left space-y-4 md:space-y-6 order-2 md:order-1 fade-transition md:pl-16 lg:pl-20">
+      <div class="flex items-center space-x-3 mb-1">
+        <span class="h-px w-8 md:w-12 bg-secondary"></span>
+        <span id="proj-tag" class="font-label text-[10px] md:text-xs uppercase tracking-[0.3em] text-secondary dark:text-orange-400 font-bold">
+          <%- (theme.home && theme.home.hero_projects && theme.home.hero_projects[0] && theme.home.hero_projects[0].tag) || 'Vol. 001 创刊号' %>
+        </span>
+      </div>
+      <h1 id="proj-title" class="font-headline text-5xl md:text-7xl lg:text-8xl text-primary dark:text-white leading-[1.1] md:leading-[0.95] tracking-tighter transition-colors">
+        <% if (theme.home && theme.home.hero_projects && theme.home.hero_projects[0] && theme.home.hero_projects[0].title_html) { %>
+          <%- theme.home.hero_projects[0].title_html %>
+        <% } else { %>
+          代码与 <br/> <span class="italic text-secondary dark:text-orange-500">诗歌.</span>
+        <% } %>
+      </h1>
+      <p id="proj-desc" class="font-body text-base md:text-xl text-on-surface-variant dark:text-gray-300 max-w-lg leading-relaxed transition-colors">
+        <%- (theme.home && theme.home.hero_projects && theme.home.hero_projects[0] && theme.home.hero_projects[0].desc) || '在这里记录技术探索、网页实验室以及偶尔的胡思乱想。一次对极简主义与前端工程化的视觉探索。' %>
+      </p>
+
+      <div class="flex flex-row items-center gap-4 pt-2 md:pt-6">
+        <a id="proj-link-1" href="<%- url_for('/archives/') %>" class="bg-secondary-container dark:bg-orange-700 text-white px-6 md:px-8 py-3 md:py-4 rounded-md font-label uppercase tracking-widest text-xs md:text-sm font-bold hover:brightness-110 transition-all active:scale-95 shadow-lg shadow-secondary/20 block text-center">
+          阅读文章
+        </a>
+
+        <a id="proj-link-2" href="<%- url_for('/projects/') %>" class="group relative py-2 md:py-4 text-primary dark:text-gray-200 font-bold font-label uppercase tracking-widest text-xs md:text-sm block">
+          <span class="flex items-center space-x-1 md:space-x-2 relative z-10">
+            <span>浏览作品</span>
+            <span class="material-symbols-outlined text-secondary dark:text-orange-400 transition-transform group-hover:translate-x-1 text-sm md:text-base">arrow_right_alt</span>
+          </span>
+          <span class="absolute bottom-1 md:bottom-3 left-0 w-full h-[3px] bg-secondary dark:bg-orange-400 scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-300 ease-out"></span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <button onclick="changeProject(1)" class="hidden md:flex absolute right-8 z-40 w-14 h-14 items-center justify-center rounded-full bg-white dark:bg-slate-800 text-primary dark:text-white hover:bg-secondary hover:text-white dark:hover:bg-orange-600 transition-all duration-300 shadow-xl active:scale-95">
+    <span class="material-symbols-outlined text-3xl">arrow_forward_ios</span>
+  </button>
+</main>
+
+<div class="w-full flex md:hidden justify-center items-center pb-8 mt-auto z-30 gap-6">
+  <button onclick="changeProject(-1)" class="w-12 h-12 flex items-center justify-center rounded-full bg-surface-variant dark:bg-slate-800 text-primary dark:text-white hover:bg-secondary hover:text-white transition-all duration-300 shadow-md active:scale-90 shrink-0">
+    <span class="material-symbols-outlined text-2xl">chevron_left</span>
+  </button>
+
+  <div class="flex space-x-2 items-center" id="mobile-dots-container"></div>
+
+  <button onclick="changeProject(1)" class="w-12 h-12 flex items-center justify-center rounded-full bg-surface-variant dark:bg-slate-800 text-primary dark:text-white hover:bg-secondary hover:text-white transition-all duration-300 shadow-md active:scale-90 shrink-0">
+    <span class="material-symbols-outlined text-2xl">chevron_right</span>
+  </button>
+</div>
+
+<div class="hidden md:flex fixed right-12 bottom-12 space-x-3 items-center z-50" id="desktop-dots-container"></div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const progressBar = document.getElementById('progress-bar');
+    const textContainer = document.getElementById('text-container');
+    const imgContainer = document.getElementById('img-container');
+    const scrollImage = document.getElementById('scroll-image');
+    const innerImg = document.getElementById('proj-img');
+    const mobileDotsContainer = document.getElementById('mobile-dots-container');
+    const desktopDotsContainer = document.getElementById('desktop-dots-container');
+
+    const projects = <%- JSON.stringify((theme.home && theme.home.hero_projects) || []) %>;
+
+    if (!progressBar || !textContainer || !imgContainer || !scrollImage || !innerImg || !mobileDotsContainer || !desktopDotsContainer || !projects.length) {
+      return;
+    }
+
+    let currentIndex = 0;
+
+    function renderDots(container, isDesktop) {
+      container.innerHTML = '';
+      projects.forEach(function (_, index) {
+        const dot = document.createElement('div');
+        const isActive = index === currentIndex;
+
+        const baseSize = isDesktop ? 'h-2.5' : 'h-2';
+        const activeWidth = isDesktop ? 'w-8' : 'w-6';
+        const inactiveWidth = isDesktop ? 'w-2.5' : 'w-2';
+
+        const activeClass = isActive
+          ? activeWidth + ' bg-secondary dark:bg-orange-500'
+          : inactiveWidth + ' bg-outline-variant dark:bg-slate-500 hover:bg-secondary-fixed';
+
+        dot.className = baseSize + ' rounded-full cursor-pointer transition-all duration-500 ' + activeClass;
+        dot.onclick = function () {
+          jumpToProject(index);
+        };
+        container.appendChild(dot);
+      });
+    }
+
+    function initDots() {
+      renderDots(mobileDotsContainer, false);
+      renderDots(desktopDotsContainer, true);
+    }
+
+    function updateUI() {
+      textContainer.classList.add('fade-out');
+      imgContainer.classList.add('fade-out');
+
+      setTimeout(function () {
+        const p = projects[currentIndex];
+        document.getElementById('proj-tag').innerHTML = p.tag;
+        document.getElementById('proj-title').innerHTML = p.title_html;
+        document.getElementById('proj-desc').innerHTML = p.desc;
+        innerImg.src = p.img;
+        document.getElementById('proj-num').innerText = p.num;
+
+        progressBar.style.width = ((currentIndex + 1) / projects.length) * 100 + '%';
+
+        renderDots(mobileDotsContainer, false);
+        renderDots(desktopDotsContainer, true);
+
+        textContainer.classList.remove('fade-out');
+        imgContainer.classList.remove('fade-out');
+      }, 400);
+    }
+
+    window.changeProject = function (direction) {
+      currentIndex = (currentIndex + direction + projects.length) % projects.length;
+      updateUI();
+    };
+
+    function jumpToProject(index) {
+      if (currentIndex === index) return;
+      currentIndex = index;
+      updateUI();
+    }
+
+    window.addEventListener('scroll', function () {
+      if (window.innerWidth < 768) {
+        const scrollY = window.scrollY;
+        const progress = Math.min(scrollY / 300, 1);
+
+        const rotY = progress * 15;
+        const rotZ = progress * -3;
+        const scale = 1 - (progress * 0.05);
+        const blur = progress * 3;
+        const grayscale = progress * 100;
+
+        scrollImage.style.transform = 'rotateY(' + rotY + 'deg) rotateZ(' + rotZ + 'deg) scale(' + scale + ')';
+        innerImg.style.filter = 'blur(' + blur + 'px) grayscale(' + grayscale + '%)';
+      } else {
+        scrollImage.style.transform = '';
+        innerImg.style.filter = '';
+      }
+    });
+
+    initDots();
+    progressBar.style.width = (1 / projects.length) * 100 + '%';
+  });
+</script>
+

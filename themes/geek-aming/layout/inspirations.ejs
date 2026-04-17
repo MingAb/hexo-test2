@@ -1,0 +1,121 @@
+<main class="flex-1 w-full flex justify-center px-6 md:px-20 pt-24 md:pt-28 pb-16">
+  <section class="w-full max-w-5xl mx-auto">
+    <header class="mb-10">
+      <div class="flex items-center space-x-3 mb-3">
+        <span class="h-px w-8 md:w-12 bg-secondary"></span>
+        <span class="font-label text-[10px] md:text-xs uppercase tracking-[0.3em] text-secondary dark:text-orange-400 font-bold">
+          灵感收集
+        </span>
+      </div>
+      <h1 class="font-headline text-4xl md:text-5xl text-primary dark:text-white leading-tight tracking-tight mb-3">
+        灵感图册
+      </h1>
+      <p class="font-body text-sm md:text-base text-on-surface-variant dark:text-gray-300 max-w-3xl">
+        这里是脑海里一闪而过的片段：界面细节、交互动效、配色组合……都被收集成一张张卡片。每一张图片背后，都有一段关于它来源与可能性的简短记录。
+      </p>
+    </header>
+
+    <% var postsArray = site.posts && site.posts.toArray ? site.posts.toArray() : (site.posts || []); %>
+    <% var inspirations = postsArray.filter(function (p) { return p.type === 'inspiration'; }); %>
+
+    <% if (!inspirations.length) { %>
+      <p class="text-on-surface-variant dark:text-gray-400 text-sm">
+        暂时还没有灵感卡片。可以创建带有 <code>type: inspiration</code> 和 <code>cover:</code> 的文章来出现在这里。
+      </p>
+    <% } else { %>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <% inspirations.sort(function (a, b) { return b.date - a.date; }).forEach(function (item) { %>
+          <button type="button" class="group text-left" data-insp-id="insp-<%= item._id %>">
+            <div class="overflow-hidden rounded-xl bg-surface-variant dark:bg-slate-800">
+              <img src="<%- item.cover || item.thumbnail || 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?q=80&w=800&auto=format&fit=crop' %>" alt="<%- item.title %>" class="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-500"/>
+            </div>
+            <div class="mt-3">
+              <h2 class="font-headline text-lg text-primary dark:text-white tracking-tight">
+                <%= item.title %>
+              </h2>
+              <p class="font-body text-xs text-on-surface-variant dark:text-gray-400 mt-1 leading-relaxed line-clamp-2">
+                <% if (item.summary) { %>
+                  <%- item.summary %>
+                <% } else if (item.excerpt && item.excerpt.length) { %>
+                  <%- strip_html(item.excerpt).substr(0, 80) %><% if (strip_html(item.excerpt).length > 80) { %>...<% } %>
+                <% } else { %>
+                  <%- strip_html(item.content).substr(0, 80) %><% if (strip_html(item.content).length > 80) { %>...<% } %>
+                <% } %>
+              </p>
+            </div>
+          </button>
+          <div id="insp-content-<%= item._id %>" class="hidden">
+            <%- item.content %>
+          </div>
+        <% }); %>
+      </div>
+    <% } %>
+  </section>
+
+  <div id="inspiration-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 backdrop-blur-sm">
+    <div class="bg-surface dark:bg-slate-900 rounded-2xl shadow-2xl max-w-5xl w-full mx-4 overflow-hidden">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-outline-variant/60 dark:border-slate-800">
+        <h2 id="inspiration-modal-title" class="font-headline text-lg md:text-xl text-primary dark:text-white tracking-tight"></h2>
+        <button type="button" id="inspiration-modal-close" class="p-2 rounded-full hover:bg-surface-variant dark:hover:bg-slate-800 transition-colors">
+          <span class="material-symbols-outlined text-base text-on-surface-variant dark:text-gray-200">close</span>
+        </button>
+      </div>
+      <div class="flex flex-col md:flex-row">
+        <div class="md:w-1/2 border-b md:border-b-0 md:border-r border-outline-variant/60 dark:border-slate-800 bg-black/5 dark:bg-white/5 flex items-center justify-center">
+          <img id="inspiration-modal-img" alt="" class="w-full h-full max-h-[70vh] object-contain"/>
+        </div>
+        <div class="md:w-1/2 max-h-[70vh] overflow-y-auto p-6">
+          <div id="inspiration-modal-body" class="prose prose-sm md:prose prose-slate dark:prose-invert max-w-none prose-p:my-2 prose-p:leading-relaxed prose-img:rounded-lg prose-a:text-secondary prose-a:no-underline hover:prose-a:underline"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    var cards = document.querySelectorAll('[data-insp-id]');
+    var modal = document.getElementById('inspiration-modal');
+    var modalTitle = document.getElementById('inspiration-modal-title');
+    var modalImg = document.getElementById('inspiration-modal-img');
+    var modalBody = document.getElementById('inspiration-modal-body');
+    var modalClose = document.getElementById('inspiration-modal-close');
+
+    if (!cards.length || !modal || !modalTitle || !modalImg || !modalBody || !modalClose) return;
+
+    function openModal(card) {
+      var id = card.getAttribute('data-insp-id').replace('insp-', '');
+      var hidden = document.getElementById('insp-content-' + id);
+      var img = card.querySelector('img');
+      var titleEl = card.querySelector('h2');
+
+      modalTitle.textContent = titleEl ? titleEl.textContent : '';
+      modalImg.src = img ? img.src : '';
+      modalImg.alt = titleEl ? titleEl.textContent : '';
+      modalBody.innerHTML = hidden ? hidden.innerHTML : '';
+
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeModal() {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    cards.forEach(function (card) {
+      card.addEventListener('click', function () {
+        openModal(card);
+      });
+    });
+
+    modalClose.addEventListener('click', closeModal);
+    modal.addEventListener('click', function (e) {
+      if (e.target === modal) closeModal();
+    });
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') closeModal();
+    });
+  });
+</script>

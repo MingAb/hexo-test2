@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html class="light" lang="<%= config.language || 'zh-CN' %>">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title><%= config.title || '极客阿明' %> | 独立思考与灵感收集</title>
+
+  <script>
+    (function () {
+      try {
+        var stored = localStorage.getItem('theme');
+        if (stored === 'dark') {
+          document.documentElement.classList.add('dark');
+        } else if (stored === 'light') {
+          document.documentElement.classList.remove('dark');
+        }
+      } catch (e) {}
+    })();
+  </script>
+
+  <script src="https://cdn.tailwindcss.com?plugins=forms,typography,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&family=Manrope:wght@200..800&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "secondary": "#ad2c00",
+            "secondary-fixed-dim": "#ffb5a0",
+            "secondary-fixed": "#ffdbd1",
+            "primary": "#021541",
+            "primary-fixed": "#dae1ff",
+            "surface": "#f9f9fb",
+            "on-surface": "#1a1c1d",
+            "surface-variant": "#e2e2e4",
+            "on-surface-variant": "#45464f",
+            "outline-variant": "#c5c6d0",
+            "secondary-container": "#d83900",
+            "on-secondary": "#ffffff",
+            "surface-container-highest": "#e2e2e4",
+            "surface-container-lowest": "#ffffff"
+          },
+          fontFamily: {
+            "headline": ["Newsreader", "Noto Serif SC", "STSong", "serif"],
+            "body": ["Manrope", "PingFang SC", "Microsoft YaHei", "sans-serif"],
+            "label": ["Manrope", "PingFang SC", "sans-serif"]
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    .fade-transition { transition: opacity 0.4s ease-in-out, transform 0.4s ease-in-out; }
+    .fade-out { opacity: 0; transform: translateY(10px); }
+    html, body { overflow-x: hidden; width: 100%; min-height: 100vh; scroll-behavior: smooth; }
+    .keep-rounded {
+      -webkit-mask-image: -webkit-radial-gradient(white, black);
+      mask-image: radial-gradient(white, black);
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
+      -webkit-transform: translate3d(0, 0, 0);
+      transform: translate3d(0, 0, 0);
+    }
+  </style>
+</head>
+<body class="bg-surface dark:bg-slate-900 text-on-surface dark:text-gray-100 font-body transition-colors duration-500 selection:bg-secondary-fixed selection:text-secondary flex flex-col relative">
+  <div class="fixed top-0 left-0 w-1/4 h-1 bg-secondary z-[60] transition-all duration-500" id="progress-bar"></div>
+
+  <nav class="fixed top-0 w-full z-50 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md flex justify-between items-center px-4 md:px-8 py-3 md:py-4 shadow-sm dark:shadow-none transition-colors duration-500">
+    <div class="text-xl md:text-2xl font-black text-blue-950 dark:text-white uppercase tracking-widest font-headline shrink-0">
+      极客阿明
+    </div>
+
+    <div class="hidden md:flex items-center space-x-10">
+      <% 
+        const isHome=is_home(); 
+        /* 先判断这两个特殊的布局 */
+        const isInspirations = is_current('inspirations') || page.layout === 'inspiration'; 
+        /* 【核心修改】：加上了 || page.project，只要文章带有 project 字段，就点亮作品集合 */
+        const isProjects = is_current('projects') || page.layout === 'project' || !!page.project;
+        
+        /* 核心修改：如果是归档，或者是文章（但必须排除作品和灵感布局）才高亮随笔文章 */
+        const isArchives = is_archive() || (is_post() && !isProjects && !isInspirations); 
+        const isAbout=is_current('about'); 
+      %>
+        <a href="<%- url_for('/') %>"
+          class="<%= isHome ? 'text-orange-700 dark:text-orange-500 font-bold border-b-2 border-orange-700 pb-1 font-serif text-lg tracking-tight' : 'text-slate-600 dark:text-slate-400 hover:text-blue-900 dark:hover:text-blue-300 transition-colors font-serif text-lg tracking-tight' %>">
+          主页展览
+        </a>
+        <a href="<%- url_for('/archives/') %>"
+          class="<%= isArchives ? 'text-orange-700 dark:text-orange-500 font-bold border-b-2 border-orange-700 pb-1 font-serif text-lg tracking-tight' : 'text-slate-600 dark:text-slate-400 hover:text-blue-900 dark:hover:text-blue-300 transition-colors font-serif text-lg tracking-tight' %>">
+          随笔文章
+        </a>
+        <a href="<%- url_for('/inspirations/') %>"
+          class="<%= isInspirations ? 'text-orange-700 dark:text-orange-500 font-bold border-b-2 border-orange-700 pb-1 font-serif text-lg tracking-tight' : 'text-slate-600 dark:text-slate-400 hover:text-blue-900 dark:hover:text-blue-300 transition-colors font-serif text-lg tracking-tight' %>">
+          灵感收集
+        </a>
+        <a href="<%- url_for('/projects/') %>"
+          class="<%= isProjects ? 'text-orange-700 dark:text-orange-500 font-bold border-b-2 border-orange-700 pb-1 font-serif text-lg tracking-tight' : 'text-slate-600 dark:text-slate-400 hover:text-blue-900 dark:hover:text-blue-300 transition-colors font-serif text-lg tracking-tight' %>">
+          作品集合
+        </a>
+        <a href="<%- url_for('/about/') %>"
+          class="<%= isAbout ? 'text-orange-700 dark:text-orange-500 font-bold border-b-2 border-orange-700 pb-1 font-serif text-lg tracking-tight' : 'text-slate-600 dark:text-slate-400 hover:text-blue-900 dark:hover:text-blue-300 transition-colors font-serif text-lg tracking-tight' %>">
+          关于我
+        </a>
+    </div>
+
+    <div class="flex items-center space-x-2 md:space-x-4">
+      <span class="md:hidden text-orange-700 dark:text-orange-500 font-bold border-b-2 border-orange-700 pb-0.5 font-serif text-sm mr-1">
+        <% if (isHome) { %>
+          主页展览
+        <% } else if (isArchives) { %>
+          随笔文章
+        <% } else if (isInspirations) { %>
+          灵感收集
+        <% } else if (isProjects) { %>
+          作品集合
+        <% } else if (isAbout) { %>
+          关于我
+        <% } else { %>
+          极客阿明
+        <% } %>
+      </span>
+      <button onclick="toggleDarkMode()" class="p-2 hover:bg-slate-200 dark:hover:bg-slate-800 transition-all duration-300 rounded-full flex items-center justify-center shrink-0">
+        <span id="theme-icon" class="material-symbols-outlined text-blue-900 dark:text-yellow-400 text-base md:text-lg">dark_mode</span>
+      </button>
+      <button onclick="toggleMobileMenu()" class="md:hidden p-2 hover:bg-slate-200 dark:hover:bg-slate-800 transition-all duration-300 rounded-full flex items-center justify-center shrink-0">
+        <span class="material-symbols-outlined text-blue-900 dark:text-white text-2xl">menu</span>
+      </button>
+    </div>
+
+    <div id="mobile-menu"
+      class="absolute top-full left-0 w-full bg-white dark:bg-slate-900 shadow-xl border-t border-gray-100 dark:border-slate-800 hidden flex-col md:hidden transition-colors z-50">
+      <a href="<%- url_for('/') %>"
+        class="px-6 py-4 border-b border-gray-100 dark:border-slate-800 <%= isHome ? 'text-orange-700 dark:text-orange-500 font-bold' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800' %>">
+        主页展览
+      </a>
+      <a href="<%- url_for('/archives/') %>"
+        class="px-6 py-4 border-b border-gray-100 dark:border-slate-800 <%= isArchives ? 'text-orange-700 dark:text-orange-500 font-bold bg-slate-50 dark:bg-slate-800/50' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800' %>">
+        随笔文章
+      </a>
+      <a href="<%- url_for('/inspirations/') %>"
+        class="px-6 py-4 border-b border-gray-100 dark:border-slate-800 <%= isInspirations ? 'text-orange-700 dark:text-orange-500 font-bold bg-slate-50 dark:bg-slate-800/50' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800' %>">
+        灵感收集
+      </a>
+      <a href="<%- url_for('/projects/') %>"
+        class="px-6 py-4 border-b border-gray-100 dark:border-slate-800 <%= isProjects ? 'text-orange-700 dark:text-orange-500 font-bold bg-slate-50 dark:bg-slate-800/50' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800' %>">
+        作品集合
+      </a>
+      <a href="<%- url_for('/about/') %>"
+        class="px-6 py-4 <%= isAbout ? 'text-orange-700 dark:text-orange-500 font-bold bg-slate-50 dark:bg-slate-800/50' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800' %>">
+        关于我
+      </a>
+    </div>
+  </nav>
+
+  <%- body %>
+
+  <footer class="w-full bg-blue-950 dark:bg-black text-white flex flex-col md:flex-row justify-center md:justify-between items-center px-12 py-6 transition-colors duration-500 z-30 relative">
+    <div class="font-serif italic text-white text-sm hidden md:block">
+      极客阿明.
+    </div>
+    <div class="font-sans text-xs uppercase tracking-widest text-white/60 text-center">
+      © <%= new Date().getFullYear() %> 极客阿明. 用键盘敲击世界.
+    </div>
+  </footer>
+
+  <script>
+    const htmlElement = document.documentElement;
+    const themeIcon = document.getElementById('theme-icon');
+    function toggleDarkMode() {
+      if (htmlElement.classList.contains('dark')) {
+        htmlElement.classList.remove('dark');
+        themeIcon.innerText = 'dark_mode';
+        themeIcon.classList.remove('text-yellow-400');
+        try {
+          localStorage.setItem('theme', 'light');
+        } catch (e) {}
+      } else {
+        htmlElement.classList.add('dark');
+        themeIcon.innerText = 'light_mode';
+        themeIcon.classList.add('text-yellow-400');
+        try {
+          localStorage.setItem('theme', 'dark');
+        } catch (e) {}
+      }
+    }
+
+    const mobileMenu = document.getElementById('mobile-menu');
+    function toggleMobileMenu() {
+      if (!mobileMenu) return;
+      mobileMenu.classList.toggle('hidden');
+      mobileMenu.classList.toggle('flex');
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+      if (!themeIcon) return;
+      var prefersDark = false;
+      try {
+        prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      } catch (e) {}
+      var stored = null;
+      try {
+        stored = localStorage.getItem('theme');
+      } catch (e) {}
+      var theme = stored || (prefersDark ? 'dark' : 'light');
+      if (theme === 'dark') {
+        htmlElement.classList.add('dark');
+        themeIcon.innerText = 'light_mode';
+        themeIcon.classList.add('text-yellow-400');
+      } else {
+        htmlElement.classList.remove('dark');
+        themeIcon.innerText = 'dark_mode';
+        themeIcon.classList.remove('text-yellow-400');
+      }
+    });
+  </script>
+</body>
+</html>

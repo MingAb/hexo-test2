@@ -1,0 +1,33 @@
+menu:
+  home: /
+  posts: /archives/
+  projects: /projects/
+  about: /about/
+
+home:
+  hero_projects:
+    - tag: "Vol. 001 创刊号"
+      title_html: "代码与 <br/> <span class='italic text-secondary dark:text-orange-500'>诗歌.</span>"
+      desc: "在这里记录技术探索、网页实验室以及偶尔的胡思乱想。一次对极简主义与前端工程化的视觉探索。"
+      img: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?q=80&w=800&auto=format&fit=crop"
+      num: "01"
+    - tag: "Vol. 002 实验室"
+      title_html: "创意与 <br/> <span class='italic text-secondary dark:text-orange-500'>设计.</span>"
+      desc: "收集全网最酷的UI交互灵感，将天马行空的设计草图，用原生代码一行行还原成真实的像素。"
+      img: "https://images.unsplash.com/photo-1561070791-2526d30994b5?q=80&w=800&auto=format&fit=crop"
+      num: "02"
+    - tag: "Vol. 003 游乐场"
+      title_html: "像素与 <br/> <span class='italic text-secondary dark:text-orange-500'>童年.</span>"
+      desc: "复刻经典的网页小游戏，用 Vanilla JS 找回红白机时代的纯粹快乐。方向键准备就绪，按 Start 键开始。"
+      img: "https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=800&auto=format&fit=crop"
+      num: "03"
+    - tag: "Vol. 004 随笔集"
+      title_html: "深夜与 <br/> <span class='italic text-secondary dark:text-orange-500'>咖啡.</span>"
+      desc: "剥离技术的坚硬外壳，记录生活碎片的柔软内核。一些关于读书、旅行和自我成长的杂谈。"
+      img: "https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=800&auto=format&fit=crop"
+      num: "04"
+    - tag: "Vol. 005 随笔集"
+      title_html: "白天与 <br/> <span class='italic text-secondary dark:text-orange-500'>酒精.</span>"
+      desc: "剥离技术的坚硬外壳，记录生活碎片的柔软内核。一些关于读书、旅行和自我成长的杂谈。"
+      img: "https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=800&auto=format&fit=crop"
+      num: "06"
