@@ -21,7 +21,10 @@
       if (collection && collection.length) {
         // 先按时间倒序排好，然后过滤掉“项目主卡片”和“项目相关的创作记录”
         filteredPosts = collection.sort('date', -1).filter(function(post) {
-          return post.layout !== 'project' && !post.project;
+          // 真正的“随笔文章” = 不是 project 布局 + 没有 project 字段 + 不是 inspiration 布局
+          return post.layout !== 'project' && 
+                 post.layout !== 'inspiration' && 
+                 !post.project;
         });
         
         // 将 Hexo 对象转化为普通数组，以便后面渲染
