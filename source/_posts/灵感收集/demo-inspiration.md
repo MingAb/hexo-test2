@@ -2,7 +2,7 @@
 title: 玻璃拟态导航栏
 date: 2024-01-15 21:30:00
 layout: inspiration
-cover: demo-inspiration/image-20260416141421462.png
+cover: demo-inspiration/image-20260416134753125.png
 summary: 一种半透明玻璃拟态的顶部导航设计，适合搭配模糊背景和高对比度标题。
 ---
 

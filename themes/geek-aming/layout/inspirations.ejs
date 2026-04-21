@@ -16,18 +16,28 @@
     </header>
 
     <% var postsArray = site.posts && site.posts.toArray ? site.posts.toArray() : (site.posts || []); %>
-    <% var inspirations = postsArray.filter(function (p) { return p.type === 'inspiration'; }); %>
+    <% var inspirations = postsArray.filter(function (p) { return p.layout === 'inspiration'; }); %>
 
     <% if (!inspirations.length) { %>
       <p class="text-on-surface-variant dark:text-gray-400 text-sm">
-        暂时还没有灵感卡片。可以创建带有 <code>type: inspiration</code> 和 <code>cover:</code> 的文章来出现在这里。
+        暂时还没有灵感卡片。可以创建带有 <code>layout: inspiration</code> 和 <code>cover:</code> 的文章来出现在这里。
       </p>
     <% } else { %>
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         <% inspirations.sort(function (a, b) { return b.date - a.date; }).forEach(function (item) { %>
           <button type="button" class="group text-left" data-insp-id="insp-<%= item._id %>">
             <div class="overflow-hidden rounded-xl bg-surface-variant dark:bg-slate-800">
-              <img src="<%- item.cover || item.thumbnail || 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?q=80&w=800&auto=format&fit=crop' %>" alt="<%- item.title %>" class="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-500"/>
+              <% 
+                // --- 路径解析魔法 开始 ---
+                let coverUrl = item.cover || item.thumbnail || 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?q=80&w=800&auto=format&fit=crop';
+                if (coverUrl && !coverUrl.startsWith('http') && !coverUrl.startsWith('/')) {
+                  let parts = coverUrl.split('/');
+                  let fileName = parts[parts.length - 1];
+                  coverUrl = url_for(item.path + fileName);
+                }
+                // --- 路径解析魔法 结束 ---
+              %>
+              <img src="<%- coverUrl %>" alt="<%- item.title %>" class="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-500"/>
             </div>
             <div class="mt-3">
               <h2 class="font-headline text-lg text-primary dark:text-white tracking-tight">
