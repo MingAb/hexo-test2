@@ -146,8 +146,10 @@ bool MainWindow::compressImage(const QString &filePath, QString &logStr)
             file.write(bufferArray);
             file.close();
             double newSizeMB = bufferArray.size() / 1024.0 / 1024.0;
-            logStr = QString("  - %1 (%.2f MB -> %.2f MB)")
-                         .arg(info.fileName()).arg(originalSizeMB).arg(newSizeMB);
+            logStr = QString("  - %1 (%2 MB -> %3 MB)")
+                         .arg(info.fileName())
+                         .arg(originalSizeMB, 0, 'f', 2)
+                         .arg(newSizeMB, 0, 'f', 2);
             return true;
         }
     }
