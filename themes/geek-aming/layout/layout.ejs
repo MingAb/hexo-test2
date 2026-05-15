@@ -68,7 +68,7 @@
   </style>
 </head>
 <body class="bg-surface dark:bg-slate-900 text-on-surface dark:text-gray-100 font-body transition-colors duration-500 selection:bg-secondary-fixed selection:text-secondary flex flex-col relative">
-  <div class="fixed top-0 left-0 w-1/4 h-1 bg-secondary z-[60] transition-all duration-500" id="progress-bar"></div>
+  <div class="fixed top-0 left-0 h-1 bg-secondary z-[60] transition-all duration-500" style="width:0%" id="progress-bar"></div>
 
   <nav class="fixed top-0 w-full z-50 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md flex justify-between items-center px-4 md:px-8 py-3 md:py-4 shadow-sm dark:shadow-none transition-colors duration-500">
     <div class="text-xl md:text-2xl font-black text-blue-950 dark:text-white uppercase tracking-widest font-headline shrink-0">
@@ -198,6 +198,24 @@
     }
 
     document.addEventListener('DOMContentLoaded', function () {
+      // 根据当前导航项设置顶部橙色进度条宽度
+      var progressBar = document.getElementById('progress-bar');
+      if (progressBar) {
+        <% if (isHome) { %>
+        progressBar.style.width = '20%';
+        <% } else if (isArchives) { %>
+        progressBar.style.width = '40%';
+        <% } else if (isInspirations) { %>
+        progressBar.style.width = '60%';
+        <% } else if (isProjects) { %>
+        progressBar.style.width = '80%';
+        <% } else if (isAbout) { %>
+        progressBar.style.width = '100%';
+        <% } else { %>
+        progressBar.style.width = '0%';
+        <% } %>
+      }
+
       if (!themeIcon) return;
       var prefersDark = false;
       try {

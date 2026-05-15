@@ -157,10 +157,18 @@
     <!-- 侧边栏（添加 sticky 定位和独立滚动条实现悬浮效果） -->
     <aside class="hidden md:flex flex-col border-r border-outline-variant/70 dark:border-slate-800 pr-8 sticky top-28 self-start max-h-[calc(100vh-8rem)] overflow-y-auto overflow-x-hidden custom-scrollbar">
       <div>
+        <%
+          var sidebarLabel = '随笔文章';
+          if (page.layout === 'project' || page.project) {
+            sidebarLabel = '作品集合';
+          } else if (page.layout === 'inspiration') {
+            sidebarLabel = '灵感收集';
+          }
+        %>
         <div class="flex items-center space-x-3 mb-4">
-          <span class="h-px w-8 bg-secondary"></span>
-          <span class="font-label text-[10px] uppercase tracking-[0.3em] text-secondary dark:text-orange-400 font-bold">
-            随笔文章
+            <span class="h-px w-8 md:w-12 bg-secondary"></span>
+            <span class="font-label text-[10px] md:text-xs uppercase tracking-[0.3em] text-secondary dark:text-orange-400 font-bold">
+            <%- sidebarLabel %>
           </span>
         </div>
         <div class="font-headline text-xl text-primary dark:text-white leading-normal tracking-tight mb-4 py-1">
@@ -190,7 +198,7 @@
         <div class="flex items-center space-x-3 mb-3 md:mb-4 md:hidden">
           <span class="h-px w-8 md:w-12 bg-secondary"></span>
           <span class="font-label text-[10px] md:text-xs uppercase tracking-[0.3em] text-secondary dark:text-orange-400 font-bold">
-            <%= date(page.date, 'YYYY MMM DD') %>
+            <%- sidebarLabel %>
           </span>
         </div>
         <h1 class="font-headline text-3xl md:text-4xl lg:text-5xl text-primary dark:text-white leading-normal tracking-tight mb-3 md:mb-4 py-1">
@@ -262,19 +270,22 @@
       figure.appendChild(btn);
     });
 
-    // 小标题导航逻辑
+    // 小标题导航逻辑（支持 h1-h6 所有级别，按最小级别为基准缩进）
     var content = document.getElementById('post-content');
     var toc = document.getElementById('post-toc');
     if (content && toc) {
-      var headings = content.querySelectorAll('h2, h3');
+      var headings = content.querySelectorAll('h1, h2, h3, h4, h5, h6');
       var items = [];
+      var minLevel = 6;
       headings.forEach(function (h, index) {
         var text = h.innerText || h.textContent || '';
         if (!text) return;
         if (!h.id) {
           h.id = 'h-' + index + '-' + Math.random().toString(16).slice(2, 6);
         }
-        items.push({ id: h.id, text: text, level: h.tagName.toLowerCase() === 'h3' ? 3 : 2 });
+        var level = parseInt(h.tagName.charAt(1));
+        if (level < minLevel) minLevel = level;
+        items.push({ id: h.id, text: text, level: level });
       });
       if (items.length) {
         var title = document.createElement('div');
@@ -285,14 +296,16 @@
           var link = document.createElement('a');
           link.href = '#' + item.id;
           link.innerText = item.text;
-          // 根据标题级别添加缩进效果
-          link.className = 'block cursor-pointer text-sm leading-relaxed text-slate-600 dark:text-slate-400 hover:text-secondary dark:hover:text-orange-400 transition-colors py-1 ' + (item.level === 3 ? 'pl-4 text-xs' : 'font-medium');
+          var depth = item.level - minLevel;
+          var indentClass = depth > 0 ? 'pl-' + (depth * 4) : '';
+          var sizeClass = depth > 0 ? 'text-xs' : 'font-medium text-sm';
+          link.className = 'block cursor-pointer leading-relaxed text-slate-600 dark:text-slate-400 hover:text-secondary dark:hover:text-orange-400 transition-colors py-1 ' + indentClass + ' ' + sizeClass;
           link.addEventListener('click', function (e) {
             e.preventDefault();
             var target = document.getElementById(item.id);
             if (!target) return;
             var rect = target.getBoundingClientRect();
-            var offset = window.scrollY + rect.top - 96; // 减去导航栏的高度
+            var offset = window.scrollY + rect.top - 96;
             window.scrollTo({ top: offset, behavior: 'smooth' });
           });
           toc.appendChild(link);

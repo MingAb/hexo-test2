@@ -153,6 +153,19 @@
       updateUI();
     }
 
+    var wheelTimeout;
+    window.addEventListener('wheel', function (e) {
+      if (wheelTimeout) return;
+      wheelTimeout = setTimeout(function () {
+        wheelTimeout = null;
+      }, 800);
+      if (e.deltaY > 0) {
+        changeProject(1);
+      } else if (e.deltaY < 0) {
+        changeProject(-1);
+      }
+    }, { passive: true });
+
     window.addEventListener('scroll', function () {
       if (window.innerWidth < 768) {
         const scrollY = window.scrollY;
