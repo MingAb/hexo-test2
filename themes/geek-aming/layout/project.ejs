@@ -16,7 +16,15 @@
     </header>
 
     <div class="mb-10 rounded-2xl overflow-hidden bg-surface-variant dark:bg-slate-900 border border-outline-variant/60 dark:border-slate-800">
-      <img src="<%- page.cover || page.thumbnail || 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?q=80&w=800&auto=format&fit=crop' %>" alt="<%- page.title %>" class="w-full max-h-[420px] object-cover"/>
+      <%
+        let coverUrl = page.cover || page.thumbnail || 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?q=80&w=800&auto=format&fit=crop';
+        if (coverUrl && !coverUrl.startsWith('http') && !coverUrl.startsWith('/')) {
+          let parts = coverUrl.split('/');
+          let fileName = parts[parts.length - 1];
+          coverUrl = url_for(page.path + fileName);
+        }
+      %>
+      <img src="<%- coverUrl %>" alt="<%- page.title %>" class="w-full max-h-[420px] object-cover"/>
     </div>
 
     <section class="mb-12">

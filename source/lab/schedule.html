@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>消防监控排班助手</title>
+    <style>
+        :root {
+            --bg-color: #f0f4f8;
+            --card-bg: #ffffff;
+            --primary-day: #FFB347; /* 橙色 - 白班 */
+            --primary-night: #6c5ce7; /* 紫色 - 夜班 */
+            --primary-rest: #00b894; /* 绿色 - 休息 */
+            --text-color: #2d3436;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 20px;
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* 顶部状态卡片 */
+        .main-card {
+            background: var(--card-bg);
+            width: 100%;
+            max-width: 360px;
+            border-radius: 25px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            text-align: center;
+            padding: 30px 20px;
+            margin-bottom: 25px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            box-sizing: border-box;
+        }
+
+        /* 回到今天按钮 */
+        .btn-reset {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(255,255,255,0.8);
+            border: 1px solid rgba(0,0,0,0.1);
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            display: none; /* 默认隐藏 */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .date-display {
+            font-size: 1.2rem;
+            color: #636e72;
+            margin-bottom: 10px;
+        }
+        
+        /* 增加一个选中日期的标签提示 */
+        .date-label {
+            font-size: 0.8rem;
+            font-weight: bold;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-bottom: 5px;
+            display: inline-block;
+        }
+
+        .shift-icon {
+            font-size: 5rem;
+            margin: 10px 0;
+            display: block;
+            animation: bounce 2s infinite;
+        }
+
+        .shift-title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .shift-desc {
+            font-size: 1rem;
+            opacity: 0.9;
+            background: rgba(255,255,255,0.6);
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-weight: 500;
+        }
+
+        /* 状态颜色类 */
+        .status-day { color: #d35400; }
+        .bg-day { background-color: #fff3cd; border: 2px solid #ffeeba; }
+        
+        .status-night { color: #4834d4; }
+        .bg-night { background-color: #e0dcfc; border: 2px solid #d1ccf8; }
+
+        .status-rest { color: #009432; }
+        .bg-rest { background-color: #d1f2eb; border: 2px solid #a3e4d7; }
+
+        /* 日历区域 */
+        .calendar-container {
+            background: var(--card-bg);
+            width: 100%;
+            max-width: 360px;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            box-sizing: border-box;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .btn-month {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 5px 15px;
+            color: #636e72;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 6px;
+            text-align: center;
+        }
+
+        .cal-head {
+            font-size: 0.8rem;
+            color: #b2bec3;
+            margin-bottom: 5px;
+        }
+
+        .cal-day {
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.1s;
+            user-select: none;
+        }
+        
+        .cal-day:active {
+            transform: scale(0.95);
+        }
+
+        .cal-day span { font-size: 0.65rem; font-weight: bold; margin-top: 2px;}
+
+        /* 今天：加一个小点或者下划线 */
+        .cal-is-today::after {
+            content: '';
+            position: absolute;
+            bottom: 3px;
+            width: 4px;
+            height: 4px;
+            background: red;
+            border-radius: 50%;
+        }
+
+        /* 选中状态：深色边框 */
+        .cal-selected {
+            box-shadow: 0 0 0 2px #2d3436;
+            z-index: 2;
+            transform: scale(1.05);
+        }
+
+        .cal-day.type-0 { background-color: #fff3cd; color: #d35400; } /* 白班 */
+        .cal-day.type-1 { background-color: #e0dcfc; color: #4834d4; } /* 夜班 */
+        .cal-day.type-2 { background-color: #d1f2eb; color: #009432; } /* 休息 */
+
+        /* 校准按钮 */
+        .calibrate-btn {
+            margin-top: 20px;
+            font-size: 0.9rem;
+            color: #636e72;
+            text-decoration: underline;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding-bottom: 30px;
+        }
+
+        /* 弹窗 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+        .modal-content {
+            background: white;
+            padding: 25px;
+            border-radius: 20px;
+            text-align: center;
+            width: 80%;
+            max-width: 300px;
+        }
+        .modal-options button {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 顶部主卡片 -->
+    <div class="main-card" id="mainCard">
+        <button class="btn-reset" id="btnReset" onclick="resetToToday()">回到今天</button>
+        <div class="date-label" id="dateLabel">TODAY</div>
+        <div class="date-display" id="currentDateStr">加载中...</div>
+        <div class="shift-icon" id="shiftIcon">🤔</div>
+        <div class="shift-title" id="shiftTitle">计算中</div>
+        <div class="shift-desc" id="shiftDesc">12小时制</div>
+    </div>
+
+    <!-- 下方日历 -->
+    <div class="calendar-container">
+        <div class="calendar-header">
+            <button class="btn-month" onclick="changeMonth(-1)">❮</button>
+            <span id="calendarMonthStr">2025年 12月</span>
+            <button class="btn-month" onclick="changeMonth(1)">❯</button>
+        </div>
+        <div class="calendar-grid">
+            <div class="cal-head">日</div><div class="cal-head">一</div><div class="cal-head">二</div>
+            <div class="cal-head">三</div><div class="cal-head">四</div><div class="cal-head">五</div>
+            <div class="cal-head">六</div>
+        </div>
+        <div class="calendar-grid" id="calendarBody">
+            <!-- 动态生成 -->
+        </div>
+    </div>
+
+    <!-- 校准功能 -->
+    <button class="calibrate-btn" onclick="openModal()">排班不对？点此校准今天</button>
+
+    <!-- 校准弹窗 -->
+    <div class="modal" id="calibrateModal">
+        <div class="modal-content">
+            <h3>校准“今天”状态</h3>
+            <p style="font-size:0.85rem; color:#888;">请选择 <span id="realTodayDate"></span> 实际上什么班：</p>
+            <div class="modal-options">
+                <button style="background:#fff3cd; color:#d35400;" onclick="calibrate(0)">白班</button>
+                <button style="background:#e0dcfc; color:#4834d4;" onclick="calibrate(1)">夜班</button>
+                <button style="background:#d1f2eb; color:#009432;" onclick="calibrate(2)">休息</button>
+                <button style="background:#eee; color:#666;" onclick="closeModal()">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 配置常量
+        const SHIFT_NAMES = ['白班', '夜班', '休息'];
+        const SHIFT_ICONS = ['☀️', '🌙', '🛌']; 
+        const SHIFT_CLASSES = ['status-day', 'status-night', 'status-rest'];
+        const BG_CLASSES = ['bg-day', 'bg-night', 'bg-rest'];
+        
+        // 基准日：2025-12-04 是白班(0)
+        const BASE_DATE = new Date(2025, 11, 4); 
+        const BASE_TYPE = 0; 
+
+        // 全局变量
+        let realToday = new Date(); // 真实的“今天”
+        let selectedDate = new Date(); // 当前选中的日期（默认为今天）
+        let viewDate = new Date(); // 日历翻页显示的月份
+
+        // 获取偏移量
+        function getOffset() {
+            return parseInt(localStorage.getItem('shiftOffset') || '0');
+        }
+        function setOffset(val) {
+            localStorage.setItem('shiftOffset', val);
+        }
+
+        // 核心算法：计算某一天是上什么班
+        function getShiftType(dateObj) {
+            let d = new Date(dateObj);
+            d.setHours(0,0,0,0);
+            let b = new Date(BASE_DATE);
+            b.setHours(0,0,0,0);
+            
+            let diffTime = d - b;
+            let diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            
+            diffDays -= getOffset(); // 减去用户校准值
+            
+            return ((diffDays % 3) + 3) % 3;
+        }
+
+        // 渲染主卡片 (根据 selectedDate)
+        function renderMainCard() {
+            let type = getShiftType(selectedDate);
+            
+            // 日期格式化
+            const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
+            document.getElementById('currentDateStr').innerText = selectedDate.toLocaleDateString('zh-CN', options);
+
+            // 判断是否是今天
+            const isToday = selectedDate.toDateString() === realToday.toDateString();
+            
+            const btnReset = document.getElementById('btnReset');
+            const dateLabel = document.getElementById('dateLabel');
+
+            if(isToday) {
+                btnReset.style.display = 'none';
+                dateLabel.innerText = "今天是";
+                dateLabel.style.backgroundColor = "rgba(0,0,0,0.05)";
+                dateLabel.style.color = "#666";
+            } else {
+                btnReset.style.display = 'block';
+                // 计算是未来还是过去
+                let diff = selectedDate - realToday;
+                let text = diff > 0 ? "未来排班" : "历史查询";
+                dateLabel.innerText = text;
+                dateLabel.style.backgroundColor = "#2d3436";
+                dateLabel.style.color = "#fff";
+            }
+
+            // 更新图标和文字
+            document.getElementById('shiftIcon').innerText = SHIFT_ICONS[type];
+            document.getElementById('shiftTitle').innerText = SHIFT_NAMES[type];
+            
+            let card = document.getElementById('mainCard');
+            card.className = 'main-card ' + BG_CLASSES[type];
+            document.getElementById('shiftTitle').className = 'shift-title ' + SHIFT_CLASSES[type];
+
+            // 描述文案
+            let desc = "";
+            if(type === 0) desc = "07:00 - 19:00 (白)";
+            if(type === 1) desc = "19:00 - 次日07:00 (夜)";
+            if(type === 2) desc = "全天休息";
+            document.getElementById('shiftDesc').innerText = desc;
+        }
+
+        // 用户点击某一天
+        function selectDate(year, month, day) {
+            selectedDate = new Date(year, month, day);
+            renderMainCard(); // 更新上方卡片
+            renderCalendar(); // 更新下方选中样式
+        }
+
+        // 回到今天
+        function resetToToday() {
+            selectedDate = new Date();
+            viewDate = new Date(); // 同时把日历也翻回来
+            renderMainCard();
+            renderCalendar();
+        }
+
+        // 渲染日历
+        function renderCalendar() {
+            const year = viewDate.getFullYear();
+            const month = viewDate.getMonth();
+            
+            document.getElementById('calendarMonthStr').innerText = `${year}年 ${month + 1}月`;
+
+            const firstDayOfMonth = new Date(year, month, 1);
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            let startDay = firstDayOfMonth.getDay(); 
+            
+            const calendarBody = document.getElementById('calendarBody');
+            calendarBody.innerHTML = '';
+
+            // 填充空白
+            for(let i=0; i<startDay; i++) {
+                calendarBody.appendChild(document.createElement('div'));
+            }
+
+            // 填充日期
+            for(let d=1; d<=daysInMonth; d++) {
+                let currentLoopDate = new Date(year, month, d);
+                let type = getShiftType(currentLoopDate);
+                
+                let cell = document.createElement('div');
+                cell.className = `cal-day type-${type}`;
+                
+                // 标记“真实今天”（红点）
+                if(currentLoopDate.toDateString() === realToday.toDateString()) {
+                    cell.classList.add('cal-is-today');
+                }
+
+                // 标记“当前选中”（黑色框）
+                if(currentLoopDate.toDateString() === selectedDate.toDateString()) {
+                    cell.classList.add('cal-selected');
+                }
+
+                // 添加点击事件
+                cell.onclick = () => selectDate(year, month, d);
+
+                cell.innerHTML = `${d}<br><span>${SHIFT_NAMES[type].charAt(0)}</span>`;
+                calendarBody.appendChild(cell);
+            }
+        }
+
+        function changeMonth(delta) {
+            viewDate.setMonth(viewDate.getMonth() + delta);
+            renderCalendar();
+        }
+
+        // 校准逻辑
+        function openModal() {
+            // 在弹窗里显示当前真实的今天日期，防止用户混淆
+            document.getElementById('realTodayDate').innerText = realToday.toLocaleDateString();
+            document.getElementById('calibrateModal').style.display = 'flex';
+        }
+        function closeModal() {
+            document.getElementById('calibrateModal').style.display = 'none';
+        }
+
+        function calibrate(correctType) {
+            // 计算 offset
+            let d = new Date(realToday);
+            d.setHours(0,0,0,0);
+            let b = new Date(BASE_DATE);
+            b.setHours(0,0,0,0);
+            let diffTime = d - b;
+            let diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            
+            let newOffset = diffDays - correctType;
+            setOffset(newOffset);
+
+            closeModal();
+            // 校准后，强制回到今天查看最新结果
+            resetToToday();
+            alert("校准成功！以后将按此规律排班。");
+        }
+
+        // 初始化
+        renderMainCard();
+        renderCalendar();
+
+        // 每天自动刷新（确保过0点后“今天”更新）
+        setInterval(() => {
+            let newNow = new Date();
+            if(newNow.getDate() !== realToday.getDate()) {
+                realToday = newNow;
+                // 如果用户当前就在看“今天”，则自动更新视图，否则只更新后台realToday
+                if(selectedDate.toDateString() === new Date(newNow.getTime() - 86400000).toDateString()){
+                    selectedDate = newNow;
+                    renderMainCard();
+                }
+                renderCalendar();
+            }
+        }, 60000);
+
+    </script>
+</body>
+</html>
